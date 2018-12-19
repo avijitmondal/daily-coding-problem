@@ -12,10 +12,20 @@ public class DailyCodingProblem2 {
 
 	public static void main(String[] args) {
 		int[] arr = { 7, 15, 10, 3 };
-		System.out.println(solution(arr));
+		arr = solution(arr);
+		for (int i = 0; i < arr.length; i++) {
+			System.out.println(arr[i]);
+		}
 	}
 
-	private static void solution(int[] arr) {
-		
+	private static int[] solution(int[] arr) {
+		int totalMultiplicationValue = 1;
+		for (int i = 0; i < arr.length; i++) {
+			totalMultiplicationValue *= arr[i];
+		}
+		for (int i = 0; i < arr.length; i++) {
+			arr[i] = totalMultiplicationValue / arr[i];
+		}
+		return arr;
 	}
 }
