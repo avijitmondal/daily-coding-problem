@@ -1,3 +1,11 @@
+/*****************************************************************************
+ * FILE NAME   : DailyCodingProblem2.java
+ * VERSION     : 1.0
+ * AUTHOR      : avijit
+ * DATE        : Dec 18, 2018
+ * DESCRIPTION : daily-coding-problem
+ *****************************************************************************/
+
 /*
  * This problem was asked by Uber.
  * Given an array of integers, return a new array such that each element at index i of the new array is the product of all the numbers in the original array except the one at i.

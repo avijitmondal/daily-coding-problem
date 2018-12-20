@@ -1,3 +1,11 @@
+/*****************************************************************************
+ * FILE NAME   : DailyCodingProblem1.java
+ * VERSION     : 1.0
+ * AUTHOR      : avijit
+ * DATE        : Dec 18, 2018
+ * DESCRIPTION : daily-coding-problem
+ *****************************************************************************/
+
 /*
  * This problem was recently asked by Google.
  * Given a list of numbers and a number k, return whether any two numbers from the list add up to k.
