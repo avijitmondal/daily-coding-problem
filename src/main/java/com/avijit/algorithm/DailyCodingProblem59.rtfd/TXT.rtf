@@ -1,0 +1,379 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf200
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fswiss\fcharset0 Helvetica-Bold;\f2\fswiss\fcharset0 Helvetica-Oblique;
+}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red247\green249\blue250;\red26\green27\blue29;
+\red255\green255\blue255;\red26\green27\blue29;\red52\green110\blue183;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0\c87059;\cssrgb\c97647\c98039\c98431;\cssrgb\c13333\c14118\c14902\c9804;
+\cssrgb\c100000\c100000\c100000;\cssrgb\c13333\c14118\c14902\c14902;\cssrgb\c25490\c51373\c76863;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}
+{\list\listtemplateid3\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid201\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid3}
+{\list\listtemplateid4\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid301\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid4}
+{\list\listtemplateid5\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid401\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid5}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}{\listoverride\listid3\listoverridecount0\ls3}{\listoverride\listid4\listoverridecount0\ls4}{\listoverride\listid5\listoverridecount0\ls5}}
+\paperw11900\paperh16840\margl1440\margr1440\vieww23080\viewh12880\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs36 \cf0 \expnd0\expndtw0\kerning0
+You have two filesystem trees, A and B. You want the files on both sides to be the same.\
+\pard\pardeftab720\partightenfactor0
+\cf0 Cases that you need to handle:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls1\ilvl0\cf0 \kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+File exists on A but not on B (and vice-versa)\
+\ls1\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+File exists on both and is identical\
+\ls1\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+File exists on both and is different\
+\pard\pardeftab720\partightenfactor0
+\cf0 Right about this point in time, you\'92re in trouble. (That was fast!) Only one of those situations can be handled automatically, and that\'92s if the file is identical on both sides. You need a lot of user input to figure out what the directories should look like, and users tend to say \'93too hard!\'94 Unison assumes that if a file is present on one side and not on the other, it has just been created. So it copies it across. Already we\'92re in dangerous territory because this is frequently 
+\f1\b not
+\f0\b0  what you want to do.\
+If the file exists and is different, you have to ask the user how to merge them or which one to pick. Asking regular users how to merge files is a bad idea. (Asking 
+\f1\b developers
+\f0\b0  how to merge files is usually a bad idea.)\
+Sigh.\
+This algorithm is not going to work very well. It doesn\'92t handle any common cases, makes a lot of mistakes in its assumptions, and asks users too much information (which will probably be wrong anyway). Anyone using this algorithm in their synchronization product (
+\f2\i *cough* Microsoft *cough*
+\f0\i0 ) is going to have a lousy product.\
+(Don\'92t get me wrong. I like Office. I like many Microsoft games. I\'92m not anti-Microsoft at all. It\'92s just Sturgeon\'92s Law: 90% of everything is crap.)\
+Unfortunately, this case is unavoidable on the very first synchronization of a pair of trees. We have no history data -- even disconnected history data -- and so cannot make informed decisions about what\'92s new, deleted or changed. The files just 
+\f2\i are
+\f0\i0  or they 
+\f2\i are not
+\f0\i0  and we can\'92t say which of the two trees is correct.\
+The next refinement is to store 
+\f2\i history data
+\f0\i0  when you look at the file trees. Every time you perform a synchronization you record some metadata for each file. You want to store the filename and the modification time. That way, when you do the 
+\f1\b next 
+\f0\b0 synchronization, you look at what changed between time X and time Y and apply 
+\f1\b those
+\f0\b0  changes to the remote file tree, somewhat like generating a diff and then patching a tree. You do this twice -- once for each direction (A to B and B to A). You can get conflicts, of course.\
+Conceptually, this looks like:\
+\pard\pardeftab720\partightenfactor0
+\cf0 {{\NeXTGraphic fsa-algo2.png \width8000 \height6680 \noorient \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\pard\pardeftab720\partightenfactor0
+\cf0 \
+Compare this with the first algorithm, which looks like this:\
+\pard\pardeftab720\partightenfactor0
+\cf0 {{\NeXTGraphic fsa-algo1.png \width8000 \height2300 \noorient \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\pard\pardeftab720\partightenfactor0
+\cf0 \
+Note that if you have no history data, Algorithm 2 works exactly like Algorithm 1. Badly.\
+This all operates much like a version control system and has similar problems and implications. A VCS usually can\'92t detect renames of files or directories -- you have to explicitly tell the VCS what you\'92ve done. When you want to perform a synchronization you have to traverse the entire directory tree to find out what\'92s changed -- and this can be very time-consuming. The metadata has to be stored somewhere. Merges almost always require manual intervention and will often be unresolvable (either the user won\'92t know what to do and will just overwrite one side, or the file format won\'92t support lines-of-text style merging).\
+Also note the similar distinction between traditional client-server VCS (e.g. CVS, Perforce) and modern distributed VCS (Mercurial, git). Client-server VCS and propagates the nodes (or the actual files being worked on). Distributed VCS propagates the edges (or diffs). Algorithm 1 is looking purely at the file data and attempting to match it on both sides; algorithm 2 is looking at the changes between the \'92sync points\'92 (or nodes) and propagating the changes.\
+The actions table for each file looks something like:\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrt\brdrs\brdrw20\brdrcf6 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalc \clcbpat3 \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrs\brdrw20\brdrcf4 \clbrdrr\brdrnil \clpadt337 \clpadl292 \clpadb337 \clpadr292 \gaph\cellx2880
+\clvertalc \clcbpat3 \clwWidth5606\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrs\brdrw20\brdrcf4 \clbrdrr\brdrnil \clpadt337 \clpadl292 \clpadb337 \clpadr292 \gaph\cellx5760
+\clvertalc \clcbpat3 \clwWidth2856\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrs\brdrw20\brdrcf4 \clbrdrr\brdrnil \clpadt337 \clpadl292 \clpadb337 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f1\b \cf0 File A change\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 File B change\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Action\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clmgf \clvertalc \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clmrg \clvertalc \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clmrg \clvertalc \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b0 \cf0 \'a0\cell 
+\pard\intbl\itap1\cell 
+\pard\intbl\itap1\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalc \clshdrawnil \clwWidth5606\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalc \clshdrawnil \clwWidth2856\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Created (checksum P)\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Created (checksum P)\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Nothing\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5606\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth2856\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Created (checksum P)\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Created (checksum Q)\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Merge\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5606\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth2856\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Deleted\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 No change\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Delete\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5606\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth2856\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Deleted\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Deleted\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Nothing\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5606\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth2856\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 No change\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 No change\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Nothing\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5606\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth2856\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Modified\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 No change\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Use file A\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrb\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5496\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5606\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth2856\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Modified\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Modified\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Merge\cell \lastrow\row
+\pard\pardeftab720\partightenfactor0
+\cf0 (The actions for File A and File B can be interchanged -- I didn\'92t feel like writing out those cases twice.)\
+If you include the possibility of renames (and horror of horrors, renames with modifies) then you can get a whole lot more combinations and it gets really nasty. I must give kudos to SourceGear for Vault for this: it does handle all of those nasty cases, a headache which I can do without.\
+Detecting what\'92s happened between time X and time Y is similarly mechanical. For a given file:\
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrt\brdrs\brdrw20\brdrcf6 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalc \clcbpat3 \clwWidth5121\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrs\brdrw20\brdrcf4 \clbrdrr\brdrnil \clpadt337 \clpadl292 \clpadb337 \clpadr292 \gaph\cellx2880
+\clvertalc \clcbpat3 \clwWidth5157\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrs\brdrw20\brdrcf4 \clbrdrr\brdrnil \clpadt337 \clpadl292 \clpadb337 \clpadr292 \gaph\cellx5760
+\clvertalc \clcbpat3 \clwWidth3681\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrs\brdrw20\brdrcf4 \clbrdrr\brdrnil \clpadt337 \clpadl292 \clpadb337 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f1\b \cf0 Time X\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Time Y\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Change\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalc \clshdrawnil \clwWidth5121\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalc \clshdrawnil \clwWidth5157\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalc \clshdrawnil \clwWidth3681\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrnil \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+
+\f0\b0 \cf0 Does not exist\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Exists\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Created\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5121\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5157\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth3681\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Exists\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Does not exist\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Deleted\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5121\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5157\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth3681\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Checksum P\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Checksum P\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Nothing\cell \row
+
+\itap1\trowd \taflags0 \trgaph108\trleft-108 \trcbpat5 \tamart360 \tamarb360 \trbrdrl\brdrs\brdrw20\brdrcf6 \trbrdrb\brdrs\brdrw20\brdrcf6 \trbrdrr\brdrs\brdrw20\brdrcf6 
+\clvertalt \clshdrawnil \clwWidth5121\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrnil \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx2880
+\clvertalt \clshdrawnil \clwWidth5157\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx5760
+\clvertalt \clshdrawnil \clwWidth3681\clftsWidth3 \clmart10 \clmarl10 \clmarb10 \clmarr10 \clbrdrt\brdrs\brdrw20\brdrcf4 \clbrdrl\brdrs\brdrw20\brdrcf4 \clbrdrb\brdrnil \clbrdrr\brdrnil \clpadt292 \clpadl292 \clpadb292 \clpadr292 \gaph\cellx8640
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Checksum P\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Checksum Q\cell 
+\pard\intbl\itap1\pardeftab720\partightenfactor0
+\cf0 Modified\cell \lastrow\row
+\pard\pardeftab720\partightenfactor0
+\cf0 Without having looked at the source code, I\'92d say this is the algorithm that Unison uses. I\'92d also guess that most \'91proper\'92 synchronization programs use this. It\'92s the simplest thing that works in most cases.\
+Note that you also need to be able to reliably detect a change in a file. The (almost) infallible way to do this is to hash the file. I say almost because hash collisions do happen -- they\'92re just extremely rare. \'91Extremely rare\'92 becomes a lot more common when you\'92re talking about a million files (32 bits of hash is not enough).\
+The other option is to look at the modification time of the file. Software can and does manipulate the modtime, however, and you might miss changes. Users might change the system time and confuse your sync program (if a change was made a long time ago). You might not be syncing to a device that has a real-time clock (some mobile phones, notably). You also have to sync the times between the two systems, but that\'92s not too hard.\
+Aaaanyway, the gist of it is:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls2\ilvl0\cf0 \kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+Checksums: reliable, slow (you have to read the entire contents of every file)\
+\ls2\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+Modification time: less reliable, much faster\
+\pard\pardeftab720\partightenfactor0
+\cf0 Some filesystems such as JFFS2 keep a revision number on each block (roughly). If the revision number goes up, you can be assured that a write has happened regardless of what the modification time says. This is not a common feature, however, and probably not accessible to userspace programs anyway. There\'92s no easy solution here.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs54\fsmilli27424 \cf0 It still sucks. How to make it usable\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 Algorithm 2 (a.k.a. \'91what everyone is using\'92) has some shortcomings:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls3\ilvl0\cf0 \kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+Detecting changes takes a long time\
+\ls3\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+It won\'92t detect renames or directory moves\
+\ls3\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+There are still some cases where you need to resolve conflicts and/or merge files\
+\pard\pardeftab720\partightenfactor0
+\cf0 There are also some usability issues:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls4\ilvl0\cf0 \kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+You need to manually initiate a sync. You can\'92t just pick up your laptop and go anytime.\
+\ls4\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+Performance sucks. I may have mentioned that a dozen or so times.\
+\ls4\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+There\'92s nothing to stop you modifying a file on both sides; you have to remember which is the most recent and remember to sync before working on the other machine.\
+\pard\pardeftab720\partightenfactor0
+\cf0 Here\'92s how I\'92ll fix these problems.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 Constantly monitor for changes\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 The existing tools require you to manually initiate a sync, at which point you\'92ll have a few minutes of disk grinding. I\'92d rather have the program running constantly and being notified of changes as they happen. The common case is that only a few files will change between syncs -- reading 
+\f1\b all
+\f0\b0  of the files is inefficient.\
+What I want is an API that notifies me when files change (or are created or deleted). I think {\field{\*\fldinst{HYPERLINK "http://en.wikipedia.org/wiki/Inotify"}}{\fldrslt \cf7 inotify}} will do this, perhaps {\field{\*\fldinst{HYPERLINK "http://savannah.nongnu.org/projects/fam/"}}{\fldrslt \cf7 FAM}}. I have no idea what to use on Windows or OSX yet. On a technical level, this is an unsolved problem.\
+There is a risk here that if files are modified while the application is not running (and hence not receiving notifications) the modifications could be lost.\
+The fallback option is to scan the file trees while the machine is idle. If you\'92re checksumming files to detect changes, this can happen during idle time as well.\
+I think idle time is a grossly underutilized resource right now -- we could be doing virus scanning, file indexing, backups and the like 
+\f1\b constantly
+\f0\b0  instead of at intervals (3am cronjob) or while the user is trying to use the system (like most on-demand virus scanners).\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 Constantly synchronize changes\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 If you\'92re going to scan all of the time, you might as well copy files straight away rather than waiting until the user requests a sync. This will cut down the odds of a merge conflict somewhat, since the files are less likely to be modified simultaneously on both sides. This introduces the idea of a pair of machines being 
+\f2\i connected
+\f0\i0 ; while they are connected, their files are always synchronized. Since you\'92re probably modifying small amounts of data at a time, this will work reasonably well over a slow network connection.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 Lock in-use files\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 Another way to prevent merge conflicts is to lock a file on machine A if it\'92s being written to on machine B. This prevents an application on machine A from modifying it at the same time.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 Identify machines by a UUID rather than IP address\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 A common situation is to have a laptop and a desktop that you want synchronized together. You have the laptop at home and sync the files. You take the laptop to work, but because you\'92re on a different IP the sync program thinks it\'92s a different machine. If you give each machine a UUID or name, you can be (reasonably) sure of its identity and hence use the right indexes or file trees.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 Checksum files or their metadata in order to detect renames\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 If you\'92ve got a checksum of each file (or just the modification time and size) and you detect a file deletion, you can look through any new files and see if they\'92re actually the same file. You can then infer that a file was moved or renamed rather than deleted and a new file created, saving time and bandwidth during the synchronization. It may be possible to optimize this further by looking at inode numbers or their equivalent on whatever filesystem is in use.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs54\fsmilli27424 \cf0 Later reflections\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 In my classic inability to actually focus on a single task for any length of time, I\'92ve been working on SyncDroid.\
+I\'92ve been attacking the tricky areas of data storage and what I refer to as the \'91datapath\'92 -- the chain of events that takes place between a change occuring on a computer and it propagating (across physical space and time) to another computer . I can partly explain why nobody has done this before: it\'92s really tricky.\
+Unison (and most other synchronizers) make some simplifying assumptions:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls5\ilvl0\cf0 \kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+There is always a master computer and a slave computer\
+\ls5\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+We only care about what is happening at this exact moment in time\
+\ls5\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+We can synchronize the times on the two computers when the synchronization occurs\
+\ls5\ilvl0\kerning1\expnd0\expndtw0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+We can suck up as much CPU and IO time as we like while synchronization takes place\
+\pard\pardeftab720\partightenfactor0
+\cf0 Unfortunately, none of these are true for SyncDroid. They have interesting consequences.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 There is always a master and a slave\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 This makes configuration management really easy: you always look to the master computer. In network-connect hosts, the master is (by definition) contactable, so you can just tell it to update its configuration with any changes made on the slave end.\
+SyncDroid doesn\'92t have this luxury. In the case of USB-drive synchronization, the two computers cannot just tell each other about changes. So there\'92s an interesting sub-synchronization problem: in order to know what 
+\f2\i data
+\f0\i0  we need to synchronize, we need to synchronize the 
+\f2\i configuration 
+\f0\i0 first.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 We only care about a single moment in time\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 There\'92s really only one trap if you use this assumption: files might change between the time you detect a change and when you actually synchronize it. This is easy to solve if you take out an exclusive lock on the file-being-synchronized and ensure that it still looks like it did when you scanned it.\
+SyncDroid cares about lots of points in time. Because it syncs constantly, we have to be very careful about what state we 
+\f2\i think 
+\f0\i0 a file is in versus what state it 
+\f2\i actually
+\f0\i0  is in. If you\'92re doing syncs to multiple partners, you have to keep track of all relevant metadata for all partners. If a partner goes away -- say the user loses the USB drive -- we shouldn\'92t waste time and resources tracking data that will never be used. And we can\'92t just rescan things constantly or lock files because that would hurt performance (or make it impossible for users to actually do work). I\'92m a user of this thing, too, and if it doesn\'92t perform acceptably, I won\'92t use it!\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 We can synchronize computer times easily\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 On a network-connected synchronizer, this is easy. You run some variation of the NTP protocol between the two hosts and calculate an offset so that you don\'92t disturb the user\'92s clock. You can then work out relative change timings and the best course of action.\
+Because this version of SyncDroid works over USB drives, it can\'92t synchronize times easily. I get around that with a \'91mountcount\'92 -- it\'92s just a number that is incremented every time the metadata on a drive is loaded. RAID arrays use the same idea to detect drives that were unplugged from an array and are now out-of-sync with the rest of the array. Each computer using a USB drive can then use the mountcount to determine relative change times without being dependent on the computer\'92s clock, which will probably be wrong.\
+The consequence of the mountcount is that multiple access to the metadata is strictly forbidden. This is reasonably easy to ensure and shouldn\'92t be visible to the user.\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 We can suck up as much CPU and IO time as we like\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 This is a big one, and it\'92s one of the major reasons I started this project. None of the current synchronizers are sensitive to the user. Perhaps I\'92m a dreamer, but I would like my files to be synchronized without taking a massive hit in PC performance (or battery life).\
+Unison (as well as most synchronizers) will do exactly\'a0 what you tell them to. If you say \'92scan for changes\'92, they will scan 
+\f2\i right now
+\f0\i0 . If you say propagate changes, they will propagate right now. While they are working, the computer is struggling under massive IO load, and if you have large amounts of data (like I do) that could lead to several minutes where the disk is spinning and you can\'92t use the computer and you have to sync 
+\f2\i right now because your plane is leaving but it\'92s still running and argh I\'92m going to be late
+\f0\i0 .\
+SyncDroid has a fairly involved set of priorities to determine under what circumstances it should scan and sync and bookkeep. For example, it has two scanner types: a notification scanner (which uses the OS to determine when files have changed) and a comprehensive scanner (in case SyncDroid wasn\'92t running and you changed a file). The notification scanner runs all of the time, but if you\'92re on battery or using the computer, it just remembers the changes in RAM and gets out of the way as quickly as possible. The comprehensive scanner only runs when the computer is connected to power and you\'92re not using it.\'a0 In this way, you get the effect of non-stop change scanning without any perceptible difference to your computer\'92s responsiveness.\
+There is a big \'91but\'92 here, and it\'92s one of those annoying engineering tradeoffs: if you are not aggressive enough about scanning, you will miss changes (say, the user disconnects their laptop without warning). If you are too aggressive, you\'92ll slow down the computer. The trick is to find a set of tradeoffs that works well in most circumstances. In those cases that it 
+\f2\i doesn\'92t 
+\f0\i0 work, you can warn the user and give them an opportunity to fix the problem (by plugging the laptop back into the network for a minute, for example).\
+\pard\pardeftab720\partightenfactor0
+
+\f1\b\fs41 \cf0 Data Storage\
+\pard\pardeftab720\partightenfactor0
+
+\f0\b0\fs36 \cf0 And then, there\'92s the hairy issue of where to put all of this data that we\'92re collecting. What we have is roughly a parallel filesystem to the one on the disk: for a file, we want to store some metadata. The best way to store this, from a design point of view, would be to store it in the filesystem itself, but this is impractical for a number of reasons (don\'92t want to change the user-visible view of their data, no filesystem support, differing semantics between systems, and so on).\
+So we have to create a filesystem within a filesystem. It\'92s another meta-problem like the sub-synchronization problem in configuration management. I considered doing this in the literal fashion -- creating an image on disk with a virtual ext2 filesystem. Instead of files, there would be structs of metadata that I had collected. Licensing issues were, well, issues here, and it would require me to maintain a fairly complicated data access layer. The big technical problem is that contemporary filesystem assume a constant-sized disk, while I wanted to be able to expand and shrink the image size dynamically.\
+My stopgap solution (while this is all stubbed out in my code) is to use a YAML file. I adore YAML. It is not a high-performance data access layer, however, and it was not designed as such. It\'92s just very easy to use.\
+Another option was a custom C data type -- or, phrased another way, \'91write my own filesystem\'92. Lots of effort. Transaction management is a big hairy problem that I don\'92t want to get into.\
+Finally, SQLite. I love SQLite -- it\'92s very easy to use and gives you very powerful query functionality. It handles on-disk consistency well and -- used sensibly -- can be very high-performance.\
+Many applications, sadly, do not use SQLite in a sensible fashion. (I\'92m looking at you, Meta-Tracker). Like any SQL database, you can do silly things to it that will absolutely destroy its performance characteristics. A classic in this situation is if you want a directory listing and your rows look like \{ filename | data \}; the database needs to do a \'92starts-with\'92 check on each row in the database because there\'92s no easy way to index efficiently by filename 
+\f1\b and 
+\f0\b0 retain\'a0simplistic tree-searching operations. This is Really Really Slow.\
+My current plan is to solve this by implementing a more traditional inode/parent structure within my database schema. I have the big advantage of knowing exactly which operations are necessary (read record by path+name, write record by id, create record by path+name, list children by path) and so can optimise specifically for them.}
