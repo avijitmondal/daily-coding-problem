@@ -1,15 +1,15 @@
 package com.avijit.algorithm;
 
-public class GraphTraversal {
+public class TreeTraversal {
 	
 	public static void main(String[] args) {
-		GraphTraversal graph = new GraphTraversal();
-		Node root = graph.createTree();
-		graph.inorder(root);
+		TreeTraversal tree = new TreeTraversal();
+		Node root = tree.createTree();
+		tree.inorder(root);
 		System.out.println();
-		graph.preorder(root);
+		tree.preorder(root);
 		System.out.println();
-		graph.postorder(root);
+		tree.postorder(root);
 	}
 	
 	Node createTree() {
